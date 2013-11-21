@@ -412,6 +412,7 @@ class MultipleFileUpload(_TransferBuildStep):
         @d.addCallback
         def checkResult(_):
             return FAILURE if cmd.didFail() else SUCCESS
+
         @d.addErrback
         def cancel(res):
             writer.cancel()
