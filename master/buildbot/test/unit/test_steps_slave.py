@@ -277,6 +277,37 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
+class TestGlobPath(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_success(self):
+        self.setupStep(slave.GlobPath(glob="*.pyc", property="x"))
+        self.expectCommands(
+            Expect('glob', {'glob': '*.pyc'})
+            + Expect.update('files', ["one.pyc", "two.pyc"])
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           status_text=["Globbed"])
+        self.expectProperty("x", ["one.pyc", "two.pyc"])
+        return self.runStep()
+
+    def test_failure(self):
+        self.setupStep(slave.GlobPath(glob="*.pyc", property="files"))
+        self.expectCommands(
+            Expect('glob', {'glob': '*.pyc'})
+            + 1
+        )
+        self.expectOutcome(result=FAILURE,
+                           status_text=["Glob failed."])
+        return self.runStep()
+
+
 class CompositeUser(buildstep.LoggingBuildStep, slave.CompositeStepMixin):
 
     def __init__(self, payload):
@@ -373,7 +404,6 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         def testFunc(x):
             res = yield x.runGlob("*.pyc")
             self.assertEqual(res, ["one.pyc", "two.pyc"])
-
         self.setupStep(CompositeUser(testFunc))
         self.expectCommands(
             Expect('glob', {'glob': '*.pyc', 'logEnviron': False})

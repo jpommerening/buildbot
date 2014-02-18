@@ -240,6 +240,46 @@ class MakeDirectory(SlaveBuildStep):
         self.finished(SUCCESS)
 
 
+class GlobPath(SlaveBuildStep):
+
+    """
+    Find files on the slave that match a shell-stype pattern.
+    """
+    name = 'GlobPath'
+    description = ['Globbing']
+    descriptionDone = ['Globbed']
+
+    renderables = ['glob']
+
+    haltOnFailure = True
+    flunkOnFailure = True
+
+    def __init__(self, glob, property, **kwargs):
+        buildstep.BuildStep.__init__(self, **kwargs)
+        self.glob = glob
+        self.property = property
+
+    def start(self):
+        slavever = self.slaveVersion('glob')
+        if not slavever:
+            raise BuildSlaveTooOldError("slave is too old, does not know "
+                                        "about glob")
+        cmd = buildstep.RemoteCommand('glob', {'glob': self.glob})
+        d = self.runCommand(cmd)
+        d.addCallback(lambda res: self.commandComplete(cmd))
+        d.addErrback(self.failed)
+
+    def commandComplete(self, cmd):
+        if cmd.didFail():
+            self.step_status.setText(["Glob failed."])
+            self.finished(FAILURE)
+            return
+        propname = self.property
+        self.setProperty(propname, cmd.updates['files'][-1], "GlobPath Step")
+        self.step_status.setText(self.describe(done=True))
+        self.finished(SUCCESS)
+
+
 class CompositeStepMixin():
 
     """I define utils for composite steps, factorizing basic remote commands"""

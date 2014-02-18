@@ -146,6 +146,8 @@ Features
 
 * Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
 
+* A new :bb:step:`GlobPath` step was added to discover files on the slave and store them in a property.
+
 Fixes
 ~~~~~
 
