@@ -213,7 +213,8 @@ class Periodic(Timed):
             return defer.succeed(lastActuated + self.periodicBuildTimer)
 
     def startBuild(self):
-        return self.addBuildsetForLatest(reason=self.reason, branch=self.branch)
+        return self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
+                                                           sourcestamps=[])
 
 
 class NightlyBase(Timed):
@@ -383,8 +384,8 @@ class Nightly(NightlyBase):
                                                     less_than=max_changeid + 1)
         else:
             # start a build of the latest revision, whatever that is
-            yield self.addBuildsetForLatest(reason=self.reason,
-                                            branch=self.branch)
+            yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
+                                                              sourcestamps=[])
 
 
 class NightlyTriggerable(NightlyBase):
@@ -462,4 +463,5 @@ class NightlyTriggerable(NightlyBase):
             props.updateFromProperties(set_props)
 
         yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
-                                                          sourcestamps=sourcestamps, properties=props)
+                                                          sourcestamps=sourcestamps,
+                                                          properties=props)
