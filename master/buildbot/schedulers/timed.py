@@ -273,6 +273,11 @@ class Nightly(NightlyBase):
                  properties={}, change_filter=None, onlyImportant=False,
                  reason="The Nightly scheduler named '%(name)s' triggered this build",
                  codebases=base.BaseScheduler.DEFAULT_CODEBASES):
+        if branch and branch is not Nightly.NoBranch:
+            if codebases is base.BaseScheduler.DEFAULT_CODEBASES:
+                codebases = {'': {'repository': '', 'branch': branch}}
+            else:
+                config.error("Nightly(%s): 'codebases' and 'branch' are mutually exclusive" % name)
         NightlyBase.__init__(self, name=name, builderNames=builderNames,
                              minute=minute, hour=hour, dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth,
                              properties=properties, codebases=codebases, reason=reason)
@@ -384,8 +389,9 @@ class Nightly(NightlyBase):
                                                     less_than=max_changeid + 1)
         else:
             # start a build of the latest revision, whatever that is
+            ss = {'codebase': self.getCodebaseDict('')}
             yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
-                                                              sourcestamps=[])
+                                                              sourcestamps=[ss])
 
 
 class NightlyTriggerable(NightlyBase):
