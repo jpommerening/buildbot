@@ -37,7 +37,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
     # minutes past the hour) and subtracted before the time offset is reported.
     localtime_offset = time.timezone % 3600
 
-    def makeScheduler(self, firstBuildDuration=0, **kwargs):
+    def makeScheduler(self, **kwargs):
         sched = self.attachScheduler(timed.Nightly(**kwargs),
                                      self.OBJECTID, overrideBuildsetMethods=True)
 
@@ -48,11 +48,10 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         # keep track of builds in self.events
         self.events = []
 
-        def addBuildsetForSourceStampsWithDefaults(reason, sourcestamps,
-                                                   waited_for=False, properties=None, builderNames=None,
-                                                   **kw):
+        origAddBuildsetForSourceStampsWithDefaults = sched.addBuildsetForSourceStampsWithDefaults
+
+        def addBuildsetForSourceStampsWithDefaults(reason, sourcestamps, **kw):
             self.assertIn('scheduler named', reason)
-            isFirst = (self.events == [])
 
             codebases = [ss['codebase'] for ss in sourcestamps] or ['']  # default codebase
             codebase_dicts = map(sched.getCodebaseDict, codebases)
@@ -60,12 +59,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
             self.events.append('B(%s)@%d' % (''.join([str(cb.get('branch')) for cb in codebase_dicts]),
                                              # show the offset as seconds past the GMT hour
                                              self.clock.seconds() - self.localtime_offset))
-            if isFirst and firstBuildDuration:
-                d = defer.Deferred()
-                self.clock.callLater(firstBuildDuration, d.callback, None)
-                return d
-            else:
-                return defer.succeed(None)
+            return origAddBuildsetForSourceStampsWithDefaults(reason=reason, sourcestamps=sourcestamps, **kw)
         sched.addBuildsetForSourceStampsWithDefaults = addBuildsetForSourceStampsWithDefaults
 
         origAddBuildsetForChanges = sched.addBuildsetForChanges
@@ -256,6 +250,14 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         # off-branch changes, and note that no build took place at 300s, as no important
         # changes had yet arrived
         self.assertEqual(self.events, ['B[3,5,6]@1500'])
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForChanges', {
+                'builderNames': None,
+                'changeids': [3, 5, 6],
+                'external_idstring': None,
+                'properties': None,
+                'reason': u"The Nightly scheduler named 'test' triggered this build",
+                'waited_for': False})])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
         return self.sched.deactivate()
