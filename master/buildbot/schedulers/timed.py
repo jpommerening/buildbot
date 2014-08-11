@@ -168,7 +168,7 @@ class Timed(base.BaseScheduler):
         def set_state_and_start():
             # bail out if we shouldn't be actuating anymore
             if not self.actuateOk:
-                return
+                defer.returnValue(None)
 
             # mark the last build time
             self.actuateAt = None
@@ -373,7 +373,7 @@ class Nightly(NightlyBase):
             else:
                 log.msg(("Nightly Scheduler <%s>: skipping build " +
                          "- No important changes on configured branch") % self.name)
-                return
+                defer.returnValue(None)
 
             changeids = sorted(classifications.keys())
             yield self.addBuildsetForChanges(reason=self.reason,
