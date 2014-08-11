@@ -270,7 +270,7 @@ class Nightly(NightlyBase):
                  codebases=base.BaseScheduler.DEFAULT_CODEBASES):
         if branch and branch is not Nightly.NoBranch:
             if codebases is base.BaseScheduler.DEFAULT_CODEBASES:
-                codebases = {'': {'repository': '', 'branch': branch}}
+                codebases = {'': {'repository': '', 'project': '', 'branch': branch, 'revision': ''}}
             else:
                 config.error("Nightly(%s): 'codebases' and 'branch' are mutually exclusive" % name)
         NightlyBase.__init__(self, name=name, builderNames=builderNames,
