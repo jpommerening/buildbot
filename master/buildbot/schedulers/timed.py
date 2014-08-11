@@ -384,7 +384,7 @@ class Nightly(NightlyBase):
                                                     less_than=max_changeid + 1)
         else:
             # start a build of the latest revision, whatever that is
-            ss = {'codebase': self.getCodebaseDict('')}
+            ss = {'codebase': ''}
             yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
                                                               sourcestamps=[ss])
 
