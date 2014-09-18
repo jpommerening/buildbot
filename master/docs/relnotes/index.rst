@@ -182,6 +182,8 @@ Changes and Removals
 
 * Buildslave info is no longer available via :ref:`Interpolate` and the ``SetSlaveInfo`` buildstep has been removed.
 
+* The :bb:chsrc:`GitPoller` changesource now detects newly pushed branches when watching all branches with the ``branches=True`` parameter.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
